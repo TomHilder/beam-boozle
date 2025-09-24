@@ -20,7 +20,7 @@ def generate_correlated_noise_psf(N, correlation_length=3.0):
     exp_part = jnp.exp(-R / (correlation_length * 3))
     psf = 0.7 * gaussian_part + 0.5 * exp_part
     # Add some asymmetry NOTE: turned off
-    psf = psf * (1 + 0.0 * jnp.sin(2 * jnp.arctan2(Y, X + 1e-10)))
+    psf = psf * (1 + 0.3 * jnp.sin(2 * jnp.arctan2(Y, X + 1e-10)))
     # Normalize
     psf = psf / jnp.sqrt(jnp.sum(psf**2))
     return psf
@@ -145,51 +145,52 @@ def estimate_noise_psd_from_data(images, mask=None, demean=False):
     return psd, acf
 
 
-N = 128
-N_noise_images = 10
+if __name__ == "__main__":
+    N = 46
+    N_noise_images = 500
 
+    psf = generate_correlated_noise_psf(N, correlation_length=2)
+    noise_images = np.array(
+        [generate_noise_image(N, psf) for _ in range(N_noise_images)]
+    )
+    psd_est, acf_est = estimate_noise_psd_from_data(jnp.asarray(noise_images))
+    acf_true, psd_true = true_noise_acf_psd_from_psf(psf, demean=False)[:2]
 
-psf = generate_correlated_noise_psf(N, correlation_length=3.5)
-noise_images = np.array([generate_noise_image(N, psf) for _ in range(N_noise_images)])
-psd_est, acf_est = estimate_noise_psd_from_data(jnp.asarray(noise_images))
-acf_true, psd_true = true_noise_acf_psd_from_psf(psf, demean=False)[:2]
+    SHRINK_PLOTS = 0.6
 
-SHRINK_PLOTS = 0.6
+    fig, ax = plt.subplots(1, 1, figsize=(SHRINK_PLOTS * 8, SHRINK_PLOTS * 8))
+    ax.set_title("Example correlated noise instance")
+    ax.imshow(noise_images[0], cmap="RdBu", vmin=-3, vmax=3)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.show()
 
-fig, ax = plt.subplots(1, 1, figsize=(SHRINK_PLOTS * 8, SHRINK_PLOTS * 8))
-ax.set_title("Example correlated noise instance")
-ax.imshow(noise_images[0], cmap="RdBu", vmin=-3, vmax=3)
-ax.set_xticks([])
-ax.set_yticks([])
-plt.show()
+    fig, ax = plt.subplots(
+        2, 3, figsize=(SHRINK_PLOTS * 12, SHRINK_PLOTS * 8), layout="compressed"
+    )
 
+    psd_max = jnp.max(psd_true)
+    acf_max = jnp.max(acf_true)
 
-fig, ax = plt.subplots(
-    2, 3, figsize=(SHRINK_PLOTS * 12, SHRINK_PLOTS * 8), layout="compressed"
-)
+    imshow_psd_kwargs = dict(vmin=-psd_max, vmax=psd_max, cmap="RdBu")
+    imshow_acf_kwargs = dict(vmin=-acf_max, vmax=acf_max, cmap="RdBu")
 
-psd_max = jnp.max(psd_true)
-acf_max = jnp.max(acf_true)
+    ax[0, 0].imshow(jnp.fft.fftshift(psd_true), **imshow_psd_kwargs)
+    ax[0, 1].imshow(jnp.fft.fftshift(psd_est), **imshow_psd_kwargs)
+    ax[0, 2].imshow(jnp.fft.fftshift(jnp.abs(psd_true - psd_est)), **imshow_psd_kwargs)
+    ax[1, 0].imshow(jnp.fft.fftshift(acf_true), **imshow_acf_kwargs)
+    ax[1, 1].imshow(jnp.fft.fftshift(acf_est), **imshow_acf_kwargs)
+    ax[1, 2].imshow(jnp.fft.fftshift(jnp.abs(acf_true - acf_est)), **imshow_acf_kwargs)
 
-imshow_psd_kwargs = dict(vmax=psd_max, cmap="viridis")
-imshow_acf_kwargs = dict(vmax=acf_max, cmap="viridis")
+    ax[0, 0].set_title("True")
+    ax[0, 1].set_title("Estimated")
+    ax[0, 2].set_title("Absolute Difference")
 
-ax[0, 0].imshow(jnp.fft.fftshift(psd_true), **imshow_psd_kwargs)
-ax[0, 1].imshow(jnp.fft.fftshift(psd_est), **imshow_psd_kwargs)
-ax[0, 2].imshow(jnp.fft.fftshift(jnp.abs(psd_true - psd_est)), **imshow_psd_kwargs)
-ax[1, 0].imshow(jnp.fft.fftshift(acf_true), **imshow_acf_kwargs)
-ax[1, 1].imshow(jnp.fft.fftshift(acf_est), **imshow_acf_kwargs)
-ax[1, 2].imshow(jnp.fft.fftshift(jnp.abs(acf_true - acf_est)), **imshow_acf_kwargs)
+    ax[0, 0].set_ylabel("PSD")
+    ax[1, 0].set_ylabel("ACF")
 
-ax[0, 0].set_title("True")
-ax[0, 1].set_title("Estimated")
-ax[0, 2].set_title("Absolute Difference")
+    for a in ax.flatten():
+        a.set_xticks([])
+        a.set_yticks([])
 
-ax[0, 0].set_ylabel("PSD")
-ax[1, 0].set_ylabel("ACF")
-
-for a in ax.flatten():
-    a.set_xticks([])
-    a.set_yticks([])
-
-plt.show()
+    plt.show()
