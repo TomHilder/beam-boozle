@@ -54,11 +54,11 @@ def estimate_noise_covariance_fft(noise_images):
     return power_spectrum  # DC at [0,0]
 
 
-N = 256
-N_noise_images = 200
+N = 512
+N_noise_images = 9
 
 
-psf = generate_correlated_noise_psf(N, correlation_length=0.5)
+psf = generate_correlated_noise_psf(N, correlation_length=3.5)
 
 noise_images = np.array([generate_noise_image(N, psf) for _ in range(N_noise_images)])
 

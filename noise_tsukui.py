@@ -173,7 +173,7 @@ def estimate_noise_psd_from_data(images, mask=None, demean=False):
 
 
 N = 512
-N_noise_images = 200
+N_noise_images = 9
 
 
 psf = generate_correlated_noise_psf(N, correlation_length=3.5)
