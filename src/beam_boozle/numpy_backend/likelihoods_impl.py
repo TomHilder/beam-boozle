@@ -8,13 +8,9 @@ def slow_log_likelihood(
     covariance_inverse: ArrayLike,
 ) -> np.ndarray:
     """
-    Exact Gaussian log-likelihood using the full inverse covariance matrix.
-
-    Notes
-    -----
-    - Intended for validation or small problems (computationally expensive).
-    - `data` and `model` are flattened before use and must have the same size.
-      After flattening, their length must match the dimension of `covariance_inverse`.
+    NumPy-backend multivariate Gaussian log-likelihood using the dense inverse covariance matrix.
+    Very expensive and slow, intended for validation on small problems. Neglects normalisation
+    constant.
 
     Parameters
     ----------
@@ -29,7 +25,7 @@ def slow_log_likelihood(
     -------
     np.ndarray
         Scalar NumPy array with the quadratic log-likelihood term:
-        -0.5 * rᵀ C⁻¹ r
+        -0.5 * R.T @ Cinv @ R
         (excludes the log-determinant constant).
     """
     residual_1d = (np.asarray(data) - np.asarray(model)).reshape(-1)
@@ -43,15 +39,8 @@ def fast_log_likelihood(
     psd_inverse: ArrayLike,
 ) -> np.ndarray:
     """
-    Approximate Gaussian log-likelihood using FFTs under stationarity,
-    where the covariance is diagonal in the Fourier basis.
-
-    Assumptions
-    -----------
-    - Stationary noise (circulant covariance).
-    - Periodic boundary conditions.
-    - `psd_inverse` matches the FFT grid and conventions of `np.fft.fft2`
-      used here (unnormalized transform).
+    NumPy-backend fast multivariate Gaussian log-likelihood using FFTs and inverse PSD. Neglects
+    normalisation constant. Assumes stationary noise covariance.
 
     Parameters
     ----------
@@ -65,8 +54,8 @@ def fast_log_likelihood(
     Returns
     -------
     np.ndarray
-        Scalar NumPy array with the quadratic term in Fourier space:
-        -0.5 * (1/(H*W)) * Σ_k |R_k|^2 * S_k^{-1}
+        Scalar NumPy array with the quadratic log-likelihood term:
+        -0.5 * R.T @ Cinv @ R
         (excludes the log-determinant constant).
     """
     residual = np.asarray(data) - np.asarray(model)

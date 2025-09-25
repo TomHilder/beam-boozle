@@ -8,14 +8,17 @@ Another project with Fourier-accelerated Gaussian processes. This time, we solve
 
 The goal is to provide a drop-in solution for anyone who is fitting to synthesised images, such that they do not have to do basically any work, but can account for correlations. The companion paper will also explore why this is important, and **increasingly important** as model complexity increases (for example deep-learning and other non-parametric models).
 
-## TODO
+## TODO (package stuff)
 
-- [ ] Fully switch to installable package + examples format
-- [ ] Clean up code such that it's actually user friendly
+- [x] Fully switch to installable package + examples format
+- [ ] Finish functionality:
+  - [x] Likelihoods with both backends
+  - [x] Noise segments -> inverse PSD estimator for users
+  - [ ] Window function / padding type thing to kill periodic boundary issues (minor anyway)
+  - [ ] Noise generation? Maybe a good check to check the ACF estimate is ok?
 - [ ] Unit tests
-- [ ] Finish all the examples for the paper
 - [ ] Clean up dependencies including Python versions to make it far easier to install for most people
 - [ ] Automated PyPI
 - [ ] Automated testing
-- [ ] Proper docs
-- [ ] Examples for different use-cases to make things as easy as possible in practice
+- [ ] Simple Examples in README
+- [ ] Tutorial notebooks for other cases/considerations

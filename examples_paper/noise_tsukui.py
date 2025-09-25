@@ -150,9 +150,7 @@ if __name__ == "__main__":
     N_noise_images = 500
 
     psf = generate_correlated_noise_psf(N, correlation_length=2)
-    noise_images = np.array(
-        [generate_noise_image(N, psf) for _ in range(N_noise_images)]
-    )
+    noise_images = np.array([generate_noise_image(N, psf) for _ in range(N_noise_images)])
     psd_est, acf_est = estimate_noise_psd_from_data(jnp.asarray(noise_images))
     acf_true, psd_true = true_noise_acf_psd_from_psf(psf, demean=False)[:2]
 

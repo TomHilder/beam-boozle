@@ -1,22 +1,16 @@
 import jax.numpy as jnp
-from jax import jit
 from numpy.typing import ArrayLike
 
 
-@jit
 def slow_log_likelihood(
     data: ArrayLike,
     model: ArrayLike,
     covariance_inverse: ArrayLike,
 ) -> jnp.ndarray:
     """
-    Exact Gaussian log-likelihood using the full inverse covariance matrix.
-
-    Notes
-    -----
-    - Intended for validation or small problems (computationally expensive).
-    - `data` and `model` are flattened before use and must have the same size.
-      After flattening, their length must match the dimension of `covariance_inverse`.
+    JAX-backend multivariate Gaussian log-likelihood using the dense inverse covariance matrix.
+    Very expensive and slow, intended for validation on small problems. Neglects normalisation
+    constant.
 
     Parameters
     ----------
@@ -31,30 +25,24 @@ def slow_log_likelihood(
     -------
     jnp.ndarray
         Scalar JAX array with the quadratic log-likelihood term:
-        -0.5 * rᵀ C⁻¹ r
+        -0.5 * R.T @ Cinv @ R
         (excludes the log-determinant constant).
     """
+    # Input safety
     residual_1d = (jnp.asarray(data) - jnp.asarray(model)).reshape(-1)
     cov_inv = jnp.asarray(covariance_inverse)
+    # Calc
     return -0.5 * residual_1d @ (cov_inv @ residual_1d)
 
 
-@jit
 def fast_log_likelihood(
     data: ArrayLike,
     model: ArrayLike,
     psd_inverse: ArrayLike,
 ) -> jnp.ndarray:
     """
-    Approximate Gaussian log-likelihood using FFTs under stationarity,
-    where the covariance is diagonal in the Fourier basis.
-
-    Assumptions
-    -----------
-    - Stationary noise (circulant covariance).
-    - Periodic boundary conditions.
-    - `psd_inverse` matches the FFT grid and conventions of `jnp.fft.fft2`
-      used here (unnormalized transform).
+    JAX-backend fast multivariate Gaussian log-likelihood using FFTs and inverse PSD. Neglects
+    normalisation constant. Assumes stationary noise covariance.
 
     Parameters
     ----------
@@ -68,15 +56,16 @@ def fast_log_likelihood(
     Returns
     -------
     jnp.ndarray
-        Scalar JAX array with the quadratic term in Fourier space:
-        -0.5 * (1/(H*W)) * Σ_k |R_k|^2 * S_k^{-1}
+        Scalar JAX array with the quadratic log-likelihood term:
+        -0.5 * R.T @ Cinv @ R
         (excludes the log-determinant constant).
     """
+    # Input safety
     residual = jnp.asarray(data) - jnp.asarray(model)
     psd_inv = jnp.asarray(psd_inverse)
-
-    residual_ft = jnp.fft.fft2(residual)  # Unnormalized FFT
+    # FFT the residual; covariance is diagonal in Fourier space
+    residual_ft = jnp.fft.fft2(residual)
     n_pixels = residual.size  # H * W
-
+    # Calculation equivalent to R.T @ Cinv @ R; also divide by n_pixels to normalise the FFT
     quadratic_form = jnp.real(jnp.sum(jnp.conj(residual_ft) * (residual_ft * psd_inv))) / n_pixels
     return -0.5 * quadratic_form
