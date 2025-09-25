@@ -25,7 +25,7 @@ packages = ["src/beam_boozle"]
 line-length = 99 # Sorry PEP8 I'm a rebel
 
 [dependency-groups]
-dev = ["pytest>=8.4.2", "pytest-cov>=7.0.0", "ruff>=0.13.1"]
+dev = ["mypy>=1.18.2", "pytest>=8.4.2", "pytest-cov>=7.0.0", "ruff>=0.13.1"]
 examples = [
     "arviz>=0.22.0",
     "corner>=2.2.3",

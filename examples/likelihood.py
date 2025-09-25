@@ -2,9 +2,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from jax import jit
-from numpy.random import default_rng
-from scipy.linalg import pinvh
-
 from materialise_cov import full_cov_from_acf
 from noise_tsukui import (
     estimate_noise_psd_from_data,
@@ -12,13 +9,15 @@ from noise_tsukui import (
     generate_noise_image,
     true_noise_acf_psd_from_psf,
 )
+from numpy.random import default_rng
+from scipy.linalg import pinvh
 
 jax.config.update("jax_enable_x64", True)
 rng = default_rng(seed=0)
 plt.style.use("mpl_drip.custom")
 
 CORR_LENGTH = 0.5
-N_IMAGE = 10
+N_IMAGE = 64
 N_NOISE_INSTANCES = 400
 
 
@@ -176,16 +175,10 @@ if __name__ == "__main__":
         [slow_log_likelihood(data, signal_far, cov_inv_true) for data in data_images]
     )
     ll_fast_close = jnp.array(
-        [
-            fast_log_likelihood(data, signal_close, power_spectrum_inv)
-            for data in data_images
-        ]
+        [fast_log_likelihood(data, signal_close, power_spectrum_inv) for data in data_images]
     )
     ll_fast_far = jnp.array(
-        [
-            fast_log_likelihood(data, signal_far, power_spectrum_inv)
-            for data in data_images
-        ]
+        [fast_log_likelihood(data, signal_far, power_spectrum_inv) for data in data_images]
     )
     ll_diff_close = ll_slow_close - ll_fast_close
     ll_diff_far = ll_slow_far - ll_fast_far
@@ -208,25 +201,16 @@ if __name__ == "__main__":
     grad_slow = jax.grad(slow_log_likelihood, argnums=1)
     grad_fast = jax.grad(fast_log_likelihood, argnums=1)
     grad_slow_vals_close = jnp.array(
-        [
-            grad_slow(data, signal_close, cov_inv_true).reshape(-1)
-            for data in data_images
-        ]
+        [grad_slow(data, signal_close, cov_inv_true).reshape(-1) for data in data_images]
     )
     grad_slow_vals_far = jnp.array(
         [grad_slow(data, signal_far, cov_inv_true).reshape(-1) for data in data_images]
     )
     grad_fast_vals_close = jnp.array(
-        [
-            grad_fast(data, signal_close, power_spectrum_inv).reshape(-1)
-            for data in data_images
-        ]
+        [grad_fast(data, signal_close, power_spectrum_inv).reshape(-1) for data in data_images]
     )
     grad_fast_vals_far = jnp.array(
-        [
-            grad_fast(data, signal_far, power_spectrum_inv).reshape(-1)
-            for data in data_images
-        ]
+        [grad_fast(data, signal_far, power_spectrum_inv).reshape(-1) for data in data_images]
     )
     grad_diff_close = grad_slow_vals_close - grad_fast_vals_close
     grad_diff_far = grad_slow_vals_far - grad_fast_vals_far

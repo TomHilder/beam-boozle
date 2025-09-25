@@ -4,11 +4,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpyro
-from numpy.random import default_rng
-from numpyro import distributions as dist
-from numpyro import infer
-from scipy.linalg import pinvh
-
 from likelihood import fast_log_likelihood
 from materialise_cov import dense_precision_from_psd, full_cov_from_acf
 from noise_tsukui import (
@@ -17,6 +12,10 @@ from noise_tsukui import (
     generate_noise_image,
     true_noise_acf_psd_from_psf,
 )
+from numpy.random import default_rng
+from numpyro import distributions as dist
+from numpyro import infer
+from scipy.linalg import pinvh
 
 jax.config.update("jax_enable_x64", True)
 rng = default_rng(seed=0)
@@ -28,7 +27,7 @@ N_IMAGE = 256
 N_NOISE_INSTANCES = 400
 
 
-A_MODEL = 25.0
+A_MODEL = 4.0
 X0_MODEL = N_IMAGE / 2
 Y0_MODEL = N_IMAGE / 2
 SIGMA_X_MODEL = N_IMAGE / 12
@@ -191,6 +190,9 @@ if __name__ == "__main__":
         )
         numpyro.factor("custom_ll", total_ll)
 
+    image_idx = 0  # which image to run inference on
+    selected_image = data_images[image_idx]
+
     sampler_uncorr = infer.MCMC(
         infer.NUTS(model_uncorr),
         num_warmup=2000,
@@ -202,7 +204,7 @@ if __name__ == "__main__":
         jax.random.PRNGKey(0),
         X_true,
         Y_true,
-        data_vector=data_images[0].flatten(),
+        data_vector=selected_image.flatten(),
         rms=rms_noise,
     )
 
@@ -217,7 +219,7 @@ if __name__ == "__main__":
         jax.random.PRNGKey(0),
         X_true,
         Y_true,
-        data_image=data_images[0],
+        data_image=selected_image,
         power_spectrum_inv=power_spectrum_inv,
     )
 
