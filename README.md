@@ -6,7 +6,7 @@ Another project with Fourier-accelerated Gaussian processes. This time, we solve
 - A super-fast _exact_ (to machine precision) likelihood that NEVER builds a matrix, and will never dominate your run time unless your images are absolutely huge
 - Both NumPy and JAX backends. The gradients are also exact to machine precision.
 
-The goal is to provide a drop-in solution for anyone who is fitting to synthesised images, such that they do not have to do basically any work, but can account for correlations. The companion paper will also explore why this is important, and increasing important as model complexity increases (for example deep-learning and other non-parametric models).
+The goal is to provide a drop-in solution for anyone who is fitting to synthesised images, such that they do not have to do basically any work, but can account for correlations. The companion paper will also explore why this is important, and **increasingly important** as model complexity increases (for example deep-learning and other non-parametric models).
 
 ## TODO
 
